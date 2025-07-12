@@ -1,0 +1,5 @@
+opencv-python
+numpy
+PyDrive
+pyserial
+python-dotenv
