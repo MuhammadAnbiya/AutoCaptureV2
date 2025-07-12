@@ -14,6 +14,7 @@ class ESPSerial:
     def send(self, message):
         if self.ser and self.ser.is_open:
             self.ser.write((message + '\n').encode())
+            self.ser.flush()  # ⬅️ Tambahan penting!
 
     def close(self):
         if self.ser and self.ser.is_open:
