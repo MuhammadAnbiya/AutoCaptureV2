@@ -30,31 +30,47 @@ Thread(target=upload_worker, args=(upload_queue, drive), daemon=True).start()
 last_capture_time = 0
 capture_delay = 3  # seconds
 
-print("[INFO] Face detection started. Press 'q' to quit.")
+# Capture queue
+capture_queue = Queue()
+
+
+# Function to handle save and upload
+def capture_worker():
+    while True:
+        frame = capture_queue.get()
+        timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"face_{timestamp}.jpg"
+        filepath = os.path.join(save_dir, filename)
+        cv2.imwrite(filepath, frame)
+        print(f"[INFO] Foto disimpan: {filepath}")
+        upload_queue.put(filepath)
+        capture_queue.task_done()
+
+
+# Start worker thread
+Thread(target=capture_worker, daemon=True).start()
+
+print("[INFO] Mulai deteksi wajah... Tekan 'q' untuk keluar.")
 
 while True:
     ret, frame = cap.read()
     if not ret:
-        print("[ERROR] Failed to read frame.")
+        print("[ERROR] Gagal membaca frame.")
         break
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
     if len(faces) > 0 and time.time() - last_capture_time > capture_delay:
-        print("[INFO] Wajah terdeteksi, tunggu 3 detik...")
-        time.sleep(3)
+        print("[INFO] Wajah terdeteksi, memproses...")
 
-        timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f"face_{timestamp}.jpg"
-        filepath = os.path.join(save_dir, filename)
-        cv2.imwrite(filepath, frame.copy())
-
-        print(f"[INFO] Foto disimpan: {filepath}")
-        upload_queue.put(filepath)
+        # Masukkan ke queue untuk diproses oleh thread
+        capture_queue.put(frame.copy())
 
         if esp.is_connected:
             esp.send("FOTO_DISIMPAN")
+        else:
+            print("[ESP32] Serial tidak terhubung.")
 
         last_capture_time = time.time()
 
