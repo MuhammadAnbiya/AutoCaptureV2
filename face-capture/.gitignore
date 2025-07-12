@@ -1,0 +1,9 @@
+# Abaikan environment dan cache Python
+acenv/
+__pycache__/
+*.pyc
+haarcascade_*.xml
+client_secrets.json
+mycreds.txt
+uploads/
+captured/
