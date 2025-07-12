@@ -1,45 +1,28 @@
-#include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
-// Ganti ke 0x3F jika 0x27 tidak muncul
-LiquidCrystal_I2C lcd(0x27, 20, 4);  // 20 karakter, 4 baris
+LiquidCrystal_I2C lcd(0x27, 16, 2);  // Ganti 0x27 jika alamat I2C kamu berbeda
 
 void setup() {
-  Wire.begin(21, 22);               // SDA = 21, SCL = 22 (ESP32 default)
+  Serial.begin(9600);
   lcd.init();
   lcd.backlight();
-  
   lcd.setCursor(0, 0);
-  lcd.print("Status: Menunggu");
-  Serial.begin(115200);
+  lcd.print("Menunggu...");
 }
 
 void loop() {
   if (Serial.available()) {
-    String msg = Serial.readStringUntil('\n');  // baca hingga newline
+    String pesan = Serial.readStringUntil('\n');
+    pesan.trim();
 
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Status:");
-    
-    // Cetak max 3 baris setelah "Status:"
-    int line = 1;
-    while (msg.length() > 0 && line <= 3) {
-      int newlineIndex = msg.indexOf('\n');
-      String lineMsg;
-
-      if (newlineIndex != -1) {
-        lineMsg = msg.substring(0, newlineIndex);
-        msg = msg.substring(newlineIndex + 1);
-      } else {
-        lineMsg = msg;
-        msg = "";
-      }
-
-      lcd.setCursor(0, line++);
-      lcd.print(lineMsg);
+    if (pesan == "FOTO_DISIMPAN") {
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Foto Disimpan!");
+      delay(3000);
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Menunggu...");
     }
-
-    Serial.println("[LCD] Pesan diterima & ditampilkan");
   }
 }
